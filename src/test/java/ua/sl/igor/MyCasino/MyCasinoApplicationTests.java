@@ -32,8 +32,6 @@ class MyCasinoApplicationTests {
         makeTestBet(player, 400, BetColor.RED, false);
         makeTestBet(player, 500, BetColor.BLACK, false);
         makeTestBet(player, 600, BetColor.GREEN, false);
-        // test3
-        // tst4
     }
 
     private void makeTestBet(Player player, long amount, BetColor betColor, boolean isWin) {

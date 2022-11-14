@@ -3,11 +3,16 @@ package ua.sl.igor.MyCasino.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ua.sl.igor.MyCasino.domain.Player;
@@ -78,9 +83,55 @@ public class PlayerService implements UserDetailsService, Validator {
         save(player);
     }
 
-    public Player save(Player player) {
-        return playerRepository.save(player);
+    public String changePlayer(Player player,
+                               String newEmail,
+                               String newName,
+                               BindingResult bindingResult,
+                               Model model
+    ) {
+        player = findById(player.getId()).orElseThrow(PlayerNotFoundException::new);
+        model.addAttribute("player", player);
+        if (player.getName().equals(newName) && player.getEmail().equals(newEmail)) {
+            return "redirect:/profile";
+        } else {
+            boolean isSomeIsTaken = false;
+            String sameName = null;
+            String sameEmail = null;
+            Optional<Player> sameNamePlayer = findByName(newName);
+            Optional<Player> sameEmailPlayer = findByEmail(newEmail);
+            if (sameNamePlayer.isPresent()) {
+                sameName = sameNamePlayer.get().getName();
+            }
+            if (sameEmailPlayer.isPresent()) {
+                sameEmail = sameEmailPlayer.get().getEmail();
+            }
+            if (newName.equals(sameName) && !(player.getName().equals(sameName))) {
+                model.addAttribute("nameError", "This name is already taken!");
+                isSomeIsTaken = true;
+            }
+            if (newEmail.equals(sameEmail) && !(player.getEmail().equals(sameEmail))) {
+                model.addAttribute("emailError", "This email is already taken!");
+                isSomeIsTaken = true;
+            }
+            if (bindingResult.hasErrors()) {
+                return "editProfile";
+            }
+            if (isSomeIsTaken) {
+                return "editProfile";
+            }
+        }
+
+        player.setName(newName);
+        player.setEmail(newEmail);
+        save(player);
+
+        Authentication oldAuth = SecurityContextHolder.getContext().getAuthentication();
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(player, oldAuth.getCredentials(), oldAuth.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+        return "redirect:/profile";
     }
+
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -102,6 +153,10 @@ public class PlayerService implements UserDetailsService, Validator {
             errors.rejectValue("name", "", "This name is already taken!");
         }
 
+    }
+
+    public Player save(Player player) {
+        return playerRepository.save(player);
     }
 
     public Optional<Player> findById(long id) {

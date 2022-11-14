@@ -69,51 +69,14 @@ public class PlayerController {
     }
 
     @PostMapping("/editProfile")
-    public String editProfileConfirm(@AuthenticationPrincipal Player player, @ModelAttribute("editPlayer") @Valid EditPlayerDTO editPlayerDTO, BindingResult bindingResult, Model model) {
-        String email = editPlayerDTO.getEmail();
-        String name = editPlayerDTO.getName();
-        player = playerService.findById(player.getId()).orElseThrow(PlayerNotFoundException::new);
-        model.addAttribute("player", player);
-        if (player.getName().equals(name) && player.getEmail().equals(email)) {
-            return "redirect:/profile";
-        } else {
-            boolean isSomeIsTaken = false;
-            String sameName = null;
-            String sameEmail = null;
-            Optional<Player> sameNamePlayer = playerService.findByName(name);
-            Optional<Player> sameEmailPlayer = playerService.findByEmail(email);
-            if (sameNamePlayer.isPresent()) {
-                sameName = sameNamePlayer.get().getName();
-            }
-            if (sameEmailPlayer.isPresent()) {
-                sameEmail = sameEmailPlayer.get().getEmail();
-            }
-            if (name.equals(sameName) && !(player.getName().equals(sameName))) {
-                model.addAttribute("nameError", "This name is already taken!");
-                isSomeIsTaken = true;
-            }
-            if (email.equals(sameEmail) && !(player.getEmail().equals(sameEmail))) {
-                model.addAttribute("emailError", "This email is already taken!");
-                isSomeIsTaken = true;
-            }
-            if (bindingResult.hasErrors()) {
-                return "editProfile";
-            }
-            if (isSomeIsTaken) {
-                return "editProfile";
-            }
-        }
-
-        player.setName(name);
-        player.setEmail(email);
-        playerService.save(player);
-
-        Authentication oldAuth = SecurityContextHolder.getContext().getAuthentication();
-        Authentication newAuth = new UsernamePasswordAuthenticationToken(player, oldAuth.getCredentials(), oldAuth.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-
-        return "redirect:/profile";
+    public String editProfileConfirm(@AuthenticationPrincipal Player player,
+                                     @ModelAttribute("editPlayer") @Valid EditPlayerDTO editPlayerDTO,
+                                     BindingResult bindingResult,
+                                     Model model
+    ) {
+        return playerService.changePlayer(player, editPlayerDTO.getEmail(), editPlayerDTO.getName(), bindingResult, model);
     }
+
 
     @PostMapping("/changePassword")
     public String editPassword(@RequestParam("oldPassword") String oldPassword, @RequestParam("newPassword") String newPassword, @AuthenticationPrincipal Player player, Model model) {

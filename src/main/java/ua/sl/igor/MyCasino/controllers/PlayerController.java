@@ -1,10 +1,7 @@
 package ua.sl.igor.MyCasino.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,7 +15,6 @@ import ua.sl.igor.MyCasino.services.PlayerService;
 import ua.sl.igor.MyCasino.util.exceptions.PlayerNotFoundException;
 
 import javax.validation.Valid;
-import java.util.Optional;
 
 @Controller
 public class PlayerController {
